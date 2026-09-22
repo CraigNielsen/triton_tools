@@ -1,0 +1,6 @@
+apiVersion: v2
+name: triton
+description: Triton Inference Server for Kubernetes and k3s
+type: application
+version: 0.1.0
+appVersion: "26.08"

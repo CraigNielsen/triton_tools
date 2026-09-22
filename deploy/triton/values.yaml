@@ -1,0 +1,27 @@
+image:
+  repository: nvcr.io/nvidia/tritonserver
+  tag: 26.08-py3
+  pullPolicy: IfNotPresent
+
+replicaCount: 1
+redeployToken: ""
+
+# Set to true to request one NVIDIA GPU for the Triton container.
+gpu: false
+gpuCount: 1
+
+# Set to "nvidia" if the cluster requires an NVIDIA runtime class.
+runtimeClassName: ""
+
+# The deploy alias supplies hostPath from the local deploy_models/ copy.
+# For remote clusters, use an existing claim containing the model repository.
+modelRepository:
+  hostPath: ""
+  existingClaim: ""
+
+# The cloned examples include models whose weights are fetched separately.
+# Load only the ready-to-use CPU example by default.
+loadModels:
+  - simple_identity
+
+resources: {}

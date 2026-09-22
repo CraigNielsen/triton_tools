@@ -1,0 +1,85 @@
+{{- $resources := deepCopy (.Values.resources | default dict) -}}
+{{- if .Values.gpu -}}
+{{- $limits := deepCopy (get $resources "limits" | default dict) -}}
+{{- $_ := set $limits "nvidia.com/gpu" (.Values.gpuCount | int) -}}
+{{- $_ := set $resources "limits" $limits -}}
+{{- end -}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-triton
+  labels:
+    app.kubernetes.io/name: triton
+    app.kubernetes.io/instance: {{ .Release.Name }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: triton
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: triton
+        app.kubernetes.io/instance: {{ .Release.Name }}
+      annotations:
+        triton-tools/redeploy-token: {{ .Values.redeployToken | quote }}
+    spec:
+      {{- if .Values.runtimeClassName }}
+      runtimeClassName: {{ .Values.runtimeClassName | quote }}
+      {{- end }}
+      containers:
+        - name: triton
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command:
+            - tritonserver
+          args:
+            - --model-repository=/models
+            - --model-control-mode=explicit
+            {{- range .Values.loadModels }}
+            - --load-model={{ . }}
+            {{- end }}
+          ports:
+            - name: http
+              containerPort: 8000
+            - name: grpc
+              containerPort: 8001
+            - name: metrics
+              containerPort: 8002
+          readinessProbe:
+            httpGet:
+              path: /v2/health/ready
+              port: http
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /v2/health/live
+              port: http
+            periodSeconds: 20
+          startupProbe:
+            httpGet:
+              path: /v2/health/live
+              port: http
+            periodSeconds: 5
+            failureThreshold: 60
+          volumeMounts:
+            - name: models
+              mountPath: /models
+              readOnly: true
+          {{- with $resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+      volumes:
+        - name: models
+          {{- if .Values.modelRepository.existingClaim }}
+          persistentVolumeClaim:
+            claimName: {{ .Values.modelRepository.existingClaim | quote }}
+          {{- else if .Values.modelRepository.hostPath }}
+          hostPath:
+            path: {{ .Values.modelRepository.hostPath | quote }}
+            type: Directory
+          {{- else }}
+          emptyDir: {}
+          {{- end }}

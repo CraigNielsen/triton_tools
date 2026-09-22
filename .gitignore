@@ -1,0 +1,45 @@
+# Python bytecode and caches
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.tox/
+.nox/
+.hypothesis/
+
+# Environments and local configuration
+.venv/
+venv/
+env/
+.env
+.env.*
+!.env.example
+
+# Builds, packages, and test coverage
+build/
+dist/
+*.egg-info/
+.eggs/
+*.egg
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
+
+# Editor and OS files
+.idea/
+.vscode/
+*.swp
+.DS_Store
+
+# Local agent instructions and coding style
+AGENTS.md
+coding_style.txt
+
+# Locally cloned Triton source
+/triton/
+
+# Models can contain large downloaded weights; recreate with setup_repo/fetch_models
+deploy_models/
